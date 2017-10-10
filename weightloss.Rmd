@@ -1,0 +1,202 @@
+---
+title: "weightloss"
+output: html_document
+---
+```{r}
+
+library(readr)
+weightloss <- read_csv("~/Downloads/weightloss.csv")
+View(weightloss)
+library(plyr)
+
+#impulse
+count(weightloss, 'impulse')
+
+#meditate
+count(weightloss, 'meditate')
+weightloss = weightloss[-81,]
+count(weightloss, 'meditate')
+
+#diary
+count(weightloss, 'diary')
+
+#married
+count(weightloss, 'married')
+
+#age
+summary(weightloss$age)
+sd(weightloss$age)
+hist(weightloss$age)
+boxplot(weightloss$age)
+
+weightloss = weightloss[-183,]
+weightloss = weightloss[-215,]
+
+summary(weightloss$age)
+sd(weightloss$age)
+median(weightloss$age)
+hist(weightloss$age)
+boxplot(weightloss$age)
+
+#goal
+summary(weightloss$goal)
+sd(weightloss$goal)
+
+hist(weightloss$goal)
+boxplot(weightloss$goal)
+
+#wtloss
+count(weightloss, 'wtloss')
+
+```
+
+```{r}
+
+with(weightloss, table(wtloss, impulse))
+impulse = matrix(c(103, 53, 100,  56), 2, 2, byrow=TRUE)
+rownames(impulse) = c("High", "Low")
+colnames(impulse) = c("No","Yes")
+mosaicplot(impulse,ylab = "weightloss goal met?", col=c("pink","lightblue"))
+
+with(weightloss, table(wtloss, meditate)[,-4])
+meditate = matrix(c(59, 45, 84,  21,60,43), 3, 2, byrow=TRUE)
+rownames(meditate) = c("Low", "Medium","High")
+colnames(meditate) = c("No","Yes")
+mosaicplot(meditate,ylab = "weightloss goal met?", col=c("pink","lightblue"))
+
+with(weightloss, table(wtloss, diary))
+diary = matrix(c(124, 66, 79,  43), 2, 2, byrow=TRUE)
+rownames(diary) = c("No Diary", "Yes Diary")
+colnames(diary) = c("No","Yes")
+mosaicplot(diary,ylab = "weightloss goal met?", col=c("pink","lightblue"))
+
+with(weightloss, table(wtloss, married))
+married = matrix(c(113, 68, 90,  41), 2, 2, byrow=TRUE)
+rownames(married) = c("Not Married", "Yes Married")
+colnames(married) = c("No","Yes")
+mosaicplot(married,ylab = "weightloss goal met?", col=c("pink","lightblue"))
+```
+
+```{r}
+
+
+
+#MODEL FITTING:
+
+
+
+#All 6 1-way models:
+impulse.model = glm(as.factor(wtloss)~as.factor(impulse),family="binomial",data = weightloss);summary(impulse.model)
+meditate.model = glm(as.factor(wtloss)~as.factor(meditate),family="binomial",data = weightloss);summary(meditate.model)
+diary.model = glm(as.factor(wtloss)~as.factor(diary),family="binomial",data = weightloss);summary(diary.model)
+married.model = glm(as.factor(wtloss)~as.factor(married),family="binomial",data = weightloss);summary(married.model)
+age.model = glm(as.factor(wtloss)~age,family="binomial",data = weightloss);summary(age.model)
+goal.model = glm(as.factor(wtloss)~goal,family="binomial",data = weightloss);summary(goal.model)
+#All fifteen 2-way models:
+impulse.meditate.model = glm(as.factor(wtloss)~as.factor(impulse)*as.factor(meditate),family="binomial",data = weightloss);summary(impulse.meditate.model)
+impulse.diary.model = glm(as.factor(wtloss)~as.factor(impulse)*as.factor(diary),family="binomial",data = weightloss);summary(impulse.diary.model)
+impulse.married.model = glm(as.factor(wtloss)~as.factor(impulse)*as.factor(married),family="binomial",data = weightloss);summary(impulse.married.model)
+impulse.age.model = glm(as.factor(wtloss)~as.factor(impulse)*age,family="binomial",data = weightloss);summary(impulse.age.model)
+impulse.goal.model = glm(as.factor(wtloss)~as.factor(impulse)*goal,family="binomial",data = weightloss);summary(impulse.goal.model)
+meditate.diary.model = glm(as.factor(wtloss)~as.factor(meditate)*as.factor(diary),family="binomial",data = weightloss);summary(meditate.diary.model)
+meditate.married.model = glm(as.factor(wtloss)~as.factor(meditate)*as.factor(married),family="binomial",data = weightloss);summary(meditate.married.model)
+meditate.age.model = glm(as.factor(wtloss)~as.factor(meditate)*age,family="binomial",data = weightloss);summary(meditate.age.model)
+meditate.goal.model = glm(as.factor(wtloss)~as.factor(meditate)*goal,family="binomial",data = weightloss);summary(meditate.goal.model)
+diary.married.model = glm(as.factor(wtloss)~as.factor(diary)*as.factor(married),family="binomial",data = weightloss);summary(diary.married.model)
+diary.goal.model = glm(as.factor(wtloss)~as.factor(diary)*goal,family="binomial",data = weightloss);summary(diary.goal.model)
+diary.age.model = glm(as.factor(wtloss)~as.factor(diary)*age,family="binomial",data = weightloss);summary(diary.age.model)
+married.age.model = glm(as.factor(wtloss)~as.factor(married)*age,family="binomial",data = weightloss);summary(married.age.model)
+married.goal.model = glm(as.factor(wtloss)~as.factor(married)*goal,family="binomial",data = weightloss);summary(married.goal.model)
+age.goal.model = glm(as.factor(wtloss)~age*goal,family="binomial",data = weightloss);summary(age.goal.model)
+
+#Dredge() run on the four variables identified as significant (or very nearly significant) from the two-way interactions
+
+global.model = glm(as.factor(wtloss)~as.factor(impulse)*as.factor(meditate)*goal*age,family="binomial",data = weightloss)
+options(na.action = "na.fail")
+library(MuMIn)
+dredge(global.model)
+dd <- dredge(global.model)
+summary(get.models(dd, 1)[[1]])
+
+finalmodel = (get.models(dd, 1)[[1]])
+
+
+
+
+
+#Assessing GOF
+#classification table
+fval = finalmodel$fitted.values
+yhat = as.numeric(fval>0.5)
+x = table(weightloss$wtloss,yhat)
+x
+
+finalmodel = get.models(dd, 1)[[1]]
+install.packages("pROC")
+library(pROC)
+
+wtloss2 = 0
+for (i in 1:313){
+  if (weightloss$wtloss[i] == "yes"){
+    wtloss2[i] = 1
+  }
+  else{
+    wtloss2[i] = 0
+  }
+}
+roc(yhat,wtloss2)
+plot(roc)
+
+
+
+
+
+```
+```{r}
+#x as age increases 
+impulse
+meditate
+goal
+
+finalmodel
+
+
+age = 30:70
+impulselow = 1
+meditatelow = 1
+meditate = 1
+goal = 10
+impulselowmeditatelow = 1
+impulselowmeditatemedium =0
+impulselowgoal = 1*10
+ 
+logodds = (finalmodel$coefficients[1] + finalmodel$coefficients[2]*age + finalmodel$coefficients[3]*impulselow + finalmodel$coefficients[4]*meditatelow + finalmodel$coefficients[5] + finalmodel$coefficients[6] + finalmodel$coefficients[7] + finalmodel$coefficients[8] + 
+finalmodel$coefficients[9] + finalmodel$coefficients[10] + 
+finalmodel$coefficients[11])
+
+probabilities = exp(logodds)/(1+exp(logodds))
+
+{plot(age,probabilities,ylim=v(1e-9, 1e-3))
+lines(age,probabilities,type="lines")}
+
+
+age = 30:70
+impulselow = 0
+meditatelow = 0
+meditate = 1
+goal = 10
+impulselowmeditatelow = 0
+impulselowmeditatemedium = 1*1
+impulselowgoal = 0
+ 
+logodds2 = (finalmodel$coefficients[1] + finalmodel$coefficients[2]*age + finalmodel$coefficients[3]*impulselow + finalmodel$coefficients[4]*meditatelow + finalmodel$coefficients[5] + finalmodel$coefficients[6] + finalmodel$coefficients[7] + finalmodel$coefficients[8] + 
+finalmodel$coefficients[9] + finalmodel$coefficients[10] + 
+finalmodel$coefficients[11])
+probabilities2 = exp(logodds2)/(1+exp(logodds2))
+
+{ plot(x=NULL,y=NULL, xlim=range(30:70), ylim=range(0:1))
+lines(age,probabilities,type="lines") 
+lines(age,probabilities2,type="lines")}
+```
+
+
